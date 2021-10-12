@@ -1,0 +1,81 @@
+#include <iostream>
+#include <bitset>
+#include <iostream>
+#include <cmath>
+#include <bits/stdc++.h>
+#include <vector>
+#include <string>
+#define M 64
+using namespace std; 
+
+
+template<typename typeRecord>
+struct extendibleHash {
+private:
+    string hashIndexFile;
+    unsigned int  GlobalDepth;
+    unsigned int BlockingFactor;
+
+    string convertBinary(long key, unsigned int length){
+        string binary= bitset<M>(key).to_string();
+        return binary.substr(M - length, length);
+    }
+
+    template <typename KeyType>
+    string generateHash(KeyType key, unsigned int length){
+         if (typeid(key) == typeid(int()) || typeid(key) == typeid(long()) || typeid(key) == typeid(double()) ||
+           typeid(key) == typeid(float()) || typeid(key) == typeid(unsigned()) || typeid(key)== typeid(char())){
+            long newKey = long (key) % int(pow(2, GlobalDepth));
+            return convertBinary(newKey, length);
+        }
+        else if (typeid(key)== typeid(string())){
+            long newKey = long (stoi("key") ) % int( pow(2, GlobalDepth));
+            return convertBinary(newKey, length);
+        }
+        else{
+            return convertBinary(key, length); 
+        }
+    }
+
+
+    void initializeBuckets(){
+        fstream bucketOne;
+        fstream bucketZero; 
+        int next_del = -1;
+        unsigned int number_of_registers = 0;
+        bucketOne.open("1.dat", std::ios::binary | std::ios::out | std::fstream::in);
+        bucketZero.open("0.dat", std::ios::binary | std::ios::out | std::fstream::in );
+        bucketOne.write((char *) &number_of_registers, sizeof(int));
+        bucketZero.write((char *) &number_of_registers, sizeof(int));
+        bucketOne.write((char *) &next_del, sizeof(int));
+        bucketZero.write((char *) &next_del, sizeof(int));
+        bucketOne.close();
+        bucketZero.close();
+    }
+
+    public:
+
+    void writeIndex(fstream &indexFile, long depth){
+        string index;
+        for(unsigned int i = 0; i< pow(2,  this->globalDepth-1); i++){
+            index = generateHash (i ,  this->globalDepth);
+            char array[ this->globalDepth];
+            strcpy(array, index.c_str());
+            indexFile.write((char*)&array,sizeof(char)*globalDepth);
+            indexFile.write((char*)&depth,sizeof(long));
+        }
+        indexFile.close();
+    }
+
+
+    extendibleHash(unsigned int GlobalDepth, const string& hashIndexFile,  unsigned int BlockingFactor) {
+        fstream indexFile;
+        this->hashIndexFile = move(hashIndexFile);
+        this->GlobalDepth = GlobalDepth;
+        this->BlockingFactor = BlockingFactor;
+        index_file.open(this->hashIndexFile, std::ios::binary | std::ios::out);
+        writeIndex( indexFile, 1);
+        initializeBuckets(); 
+    }
+    
+    };
