@@ -42,7 +42,7 @@ struct Car {
         this->tax = tax;
         this->milesPerGaloon = milesPerGaloon;
         this->engineSize = engineSize;
-        this->deleteNext = -3;
+        this->deleteNext = -1;
     }
 
 
