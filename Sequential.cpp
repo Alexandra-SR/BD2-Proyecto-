@@ -1,4 +1,6 @@
 #include <iostream>
+#include <stdlib.h>
+#include <stdio.h>
 #include <fstream>
 #include <string>
 #include <cstring>
@@ -7,27 +9,15 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <iomanip>
+#include "registro.h"
 
 using namespace std;
 
-struct Registro{
-
-  int pos;
-  char location;
-  int nextPos;
-  char nextLocation;
-
-
-  Registro(){
-  }
-
-};
-
 struct comparator{
   inline bool operator() (const Registro& registro1, const Registro& registro2){
-    if(string(registro1.nombre).compare(string(registro2.nombre))<0)
+    if(registro1.id < registro2.id)
     return true;
-
     return false;
   }
 };
@@ -38,12 +28,28 @@ class Sequential_File{
   int auxSize = 0;
 
   public:
+
+  Registro readLineFromCsv(string line){
+    auto id = stoul(line.substr(0,6));
+    auto model = line.substr(7,9);
+    auto year = stoi(line.substr(11,14));
+    auto price = stoul(line.substr(16,20));
+    auto transmission = line.substr(23,31);
+    auto mileage = stoul(line.substr(33,37));
+    auto fuelType = line.substr(40,45);
+    auto tax = stod(line.substr(46,48));
+    auto mpg = stod(line.substr(50,53));
+    auto engineSize = stod(line.substr(56,58));
+    Registro r = Registro(id, model, year, price, transmission, mileage, fuelType, tax, mpg, engineSize);
+    return r;
+  }
+
   void insertAll(vector<Registro> registros){
     mainSize= 0;
     auxSize = 0;
     //Borrado de datos
     ofstream files;
-    files.open("datos.bin", std::ofstream::out | std::ofstream::trunc);
+    files.open("datos.bin", std::ofstream::out | std::ofstream::trunc | ios::binary);
     files.close();
     files.open("aux.bin", std::ofstream::out | std::ofstream::trunc);
     files.close();
@@ -54,14 +60,12 @@ class Sequential_File{
     datos.open("datos.bin", ios::binary | ios::in);
     if(datos.is_open()){
       for(auto registro:registros){
-
-        registro.pos = datos.tellp();
-        registro.location = 'd';
-        registro.nextPos = int(datos.tellp()) + sizeof(Registro);
-        registro.nextLocation = 'd';
+        registro.pos = datos.tellp()/78;
+        registro.location = 'm';
+        registro.nextPos = int(datos.tellp())/78 + 1;
+        registro.nextLocation = 'm';
         datos.write((char*)&registro, sizeof(Registro));
         mainSize++;
-
       }
     }else{
       cout<<"No se pudo abrir el archivo";
@@ -74,56 +78,95 @@ class Sequential_File{
     datos.open("datos.bin", ios::binary);
     vector<Registro> registros = {};
     Registro registro;
-    if(datos.is_open()){
-      datos.seekg(0,ios::beg);
+    if (datos.is_open()) {
+      datos.seekg(0, ios::beg);
       while (datos.read((char *) &registro, sizeof(Registro))) {
-        registros.push_back(registro);
+        if(registro.location != '-'){
+          registros.push_back(registro);
+        }
       }
-    }
-    else{cout<<"\nNo se pudo abrir el archivo";}
+    } else { cout << "\nNo se pudo abrir el archivo"; }
 
     datos.open("aux.bin", ios::binary);
-    if(datos.is_open()){
-      datos.seekg(0,ios::beg);
+    if (datos.is_open()) {
+      datos.seekg(0, ios::beg);
       while (datos.read((char *) &registro, sizeof(Registro))) {
-        registros.push_back(registro);
+        if(registro.location != '-'){
+          registros.push_back(registro);
+        }
       }
-    }
-    else{cout<<"\nNo se pudo abrir el archivo";}
+      } else { cout << "\nNo se pudo abrir el archivo"; }
 
     datos.close();
     return registros;
   }
 
-  void update(Registro registro){
+  vector<Registro> getAllFromCsv(){
+    ifstream datos;
+    datos.open("fl_data.csv");
+    vector<Registro> registros = {};
+    Registro registro;
+    string line;
+
+    if(datos.is_open()){
+      datos.seekg(0,ios::beg);
+      while(getline(datos, line)){
+        Registro r = readLineFromCsv(line);
+        registros.push_back(r);
+      }
+    }
+    else{cout<<"\nNo se pudo abrir el archivo";}
+    datos.close();
+    return registros;
+  }
+  
+  void update(Registro& registro){
     ofstream datos;
-    if(registro.location == 'd'){
+    if (registro.location == 'm') {
       datos.open("datos.bin", ios::binary | ios::in);
-    }else{
+    } else {
       datos.open("aux.bin", ios::binary | ios::in);
     }
-    
-    if(datos.is_open()){
-      int pos = registro.pos;
-      datos.seekp(pos,ios::beg);
-      datos.write((char*)&registro, sizeof(Registro));
 
-    }else{
-      cout<<"No se pudo abrir el archivo";
+    if (datos.is_open()) {
+      int pos = registro.pos;
+      datos.seekp(pos*sizeof(Registro), ios::beg);
+      datos.write((char *) &registro, sizeof(Registro));
+    } else {
+      cout << "No se pudo abrir el archivo";
     }
     datos.close();
   }
 
+  bool readNext(Registro & registro){
+    ifstream datos;
+
+    if(registro.nextLocation == 'm'){
+      datos.open("datos.bin", ios::binary);
+    }else{
+      datos.open("aux.bin", ios::binary);
+    }
+
+    datos.seekg(registro.nextPos*sizeof(Registro), ios::beg);
+		if(datos.read((char*)&registro, sizeof(Registro))){
+      datos.close();
+      return true;
+    }
+    return false;
+  }
+  
   void add(Registro registro){
     ofstream datos;
     datos.open("aux.bin", ios::binary | ios::app);
     if(datos.is_open()){
+       cout<< "datos open\n";
       if(auxSize == 5){
+         cout<<"getall";
         vector<Registro> registros = getAll();
         insertAll(registros);
       }
       else{
-        auto prev = search(registro.nombre);
+        auto prev = search(registro.id);
 
         registro.location = 'a';
         registro.pos = datos.tellp();
@@ -135,7 +178,6 @@ class Sequential_File{
         prev.nextLocation = 'a';
 
         update(prev);
-
         datos.write((char*)&registro, sizeof(Registro));
         auxSize++;
       }
@@ -144,37 +186,8 @@ class Sequential_File{
     }
     datos.close();
   }
-
-  bool readNext(Registro & registro){
-    ifstream datos;
-    datos.open("datos.bin", ios::binary);
-
-    ifstream datos_aux;
-    datos_aux.open("aux.bin", ios::binary);
-
-    if(registro.nextLocation == 'd'){
-        datos.seekg(registro.nextPos, ios::beg);
-		    if(datos.read((char*)&registro, sizeof(Registro))){
-          datos.read((char*)&registro, sizeof(Registro));
-          datos.close();
-          datos_aux.close();
-          return true;
-        }
-	    }
-    if(registro.nextLocation == 'a'){
-		  datos_aux.seekg(registro.nextPos, ios::beg);
-		  if(datos_aux.read((char*)&registro, sizeof(Registro))){
-        datos_aux.read((char*)&registro, sizeof(Registro));
-        datos.close();
-        datos_aux.close();
-        return true;
-      }
-	  }
-    datos.close();datos_aux.close();return false;
-  }
-
-  Registro search(string key){
-    key.erase(remove(key.begin(), key.end(), ' '), key.end());
+  
+  Registro search(unsigned int key){
     ifstream datos;
     datos.open("datos.bin", ios::binary);
 
@@ -183,61 +196,125 @@ class Sequential_File{
     int b = mainSize-1;
     int m;
 
-    do{
+    do{     
       m = ceil((a+b)/2);
       datos.seekg(m*sizeof(Registro), ios::beg);
       datos.read((char*)&registro, sizeof(Registro));
-      if(string(registro.nombre).compare(key) < 0){
+      if(registro.id > key){
 		    b = m-1;
       }
-      else if (string(registro.nombre).compare(key) > 0) {
+      else if (registro.id < key) {
 	      a = m;
       }
-      else{
+      else if(registro.id == key && registro.location != '-'){
         return registro;
       }
-    }while(a<b);
+      else{
+        b = m-1;
+      }
+    }while(a+1<b);
 
     m = ceil((a+b)/2);
     datos.seekg(m*sizeof(Registro), ios::beg);
     datos.read((char*)&registro, sizeof(Registro));
-    Registro registroNext = registro;
+    Registro registroMin;
 
-    while(string(registro.nombre).compare(key) < 0 && readNext(registroNext)){
-      string nombre_n = string(registroNext.nombre,15);
-      nombre_n.erase(remove(nombre_n.begin(), nombre_n.end(), ' '), nombre_n.end());
-      if(nombre_n.compare(key) == 0){
+    if(registro.location == '-'){
+      Registro registroMin;
+      datos.seekg(0, ios::beg);
+      while (datos.read((char *) &registro, sizeof(Registro))) {
+        if(registro.location != '-' && registro.id < key){
+          registroMin = registro;
+          break;
+        }
+      }
+      datos.open("aux.bin", ios::binary);
+      datos.seekg(0, ios::beg);
+      while (datos.read((char *) &registro, sizeof(Registro))) {
+        if(registro.nextLocation != '-' && registro.id < key){
+          registroMin = registro;
+          break;
+        }
+      }
+    }
+
+    registroMin = registro;
+    Registro registroNext = registroMin;
+    while(registro.id < key && readNext(registroNext)){
+      if(registroNext.id==key){
         return registroNext;
-      }else if(nombre_n.compare(key) > 0){
+      }else if(registroNext.id > key){
         return registro;
       }
-      registro = registroNext;
+      registro = registroNext; 
     }
 
     datos.close();
     return registro;
   }
-
-  vector<Registro> rangeSearch(string begin, string end){
-
-    begin.erase(remove(begin.begin(), begin.end(), ' '), begin.end());
-    end.erase(remove(end.begin(), end.end(), ' '), end.end());
+  
+  vector<Registro> rangeSearch(unsigned int begin, unsigned int end){
 
     vector<Registro> registros = {};
     Registro registro = search(begin);
 
-    string nombre_r = string(registro.nombre,15);
-    nombre_r.erase(remove(nombre_r.begin(), nombre_r.end(), ' '), nombre_r.end());
-
-    if(nombre_r.compare(begin)< 0 || nombre_r.compare(end) > 0){
+    if(registro.id < begin){
       readNext(registro);
     }
-    while(nombre_r.compare(begin)>= 0 && nombre_r.compare(end)<=0){
+    while(registro.id >= begin && registro.id <= end){
       registros.push_back(registro);
       if(!readNext(registro)){
         break;
-      };
+      }
     }
     return registros;
   }
+
+  bool deleteRegistro(unsigned int key){
+    Registro registro = search(key-1);
+
+    Registro registroNext = registro;
+
+    while(registro.id < key && readNext(registroNext)){
+      if(registroNext.id==key){
+        registro.nextPos = registroNext.nextPos;
+        registro.nextLocation = registroNext.nextLocation;
+        update(registro);
+        registroNext.nextPos = -1;
+        registroNext.nextLocation = '-';
+        update(registroNext);
+        registroNext.display();
+        return true;
+      }
+      registro = registroNext;
+    }
+    return false;
+  }
+  
 };
+
+int main() {
+  vector<Registro> registros = {};
+  
+  /*
+  for(auto registro:registros){
+    registro.display()
+    ;
+  }*/
+
+  Sequential_File s;
+  registros = s.getAllFromCsv();
+
+  s.insertAll(registros);
+  registros = s.getAll();
+  
+  cout << "delete\n";
+  s.deleteRegistro(438109);
+  cout << "rangeSearch\n";
+
+  auto vr = s.rangeSearch(438107, 438110);
+  for(auto x: vr){
+    x.display();cout<<"\n"<<"\n";
+  }
+  
+}
