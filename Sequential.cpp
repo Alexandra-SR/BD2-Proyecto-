@@ -11,31 +11,16 @@
 using namespace std;
 
 struct Registro{
-  char codigo [5];
-  char nombre [20];
-  char carrera [15];
-  int ciclo;
 
   int pos;
   char location;
   int nextPos;
   char nextLocation;
 
-  Registro(string codigo, string nombre, string carrera, int ciclo){
-    strcpy(this->codigo, codigo.c_str());
-    strcpy(this->nombre, nombre.c_str());
-    strcpy(this->carrera, carrera.c_str());
-    this->ciclo = ciclo;
-  }
+
   Registro(){
   }
 
-  void display(){
-    cout<<"\n"<<string(codigo,sizeof(codigo));
-    cout<<string(nombre,sizeof(nombre));
-    cout<<string(carrera,sizeof(carrera));
-    cout<<ciclo;
-  }
 };
 
 struct comparator{
@@ -256,28 +241,3 @@ class Sequential_File{
     return registros;
   }
 };
-
-int main() {
-  vector<Registro> registros = {};
-  Registro registro("0008 ","Juan Pablo          ","CS             ",6);
-  Registro registro2("0007 ","Pedro Pablo         ","CS             ",7);
-  Registro registro3("0006 ","Perez Pablo         ","CS             ",4);
-  registros.push_back(registro);
-  Sequential_File s;
-
-  s.insertAll(registros);
-
-  s.add(registro);
-  s.add(registro3);
-  s.add(registro2);
-
-  cout<<"Simple search"<<endl;
-  registro = s.search("Perez Pablo");
-  registro.display();
-
-  cout<<endl<<endl<<endl<<"Range search"<<endl;
-  registros = s.rangeSearch("Juan Pablo","Perez Pablo");
-  for(auto registro:registros){
-    registro.display();
-  }
-}
