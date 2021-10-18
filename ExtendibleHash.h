@@ -73,7 +73,7 @@ private:
     void deleteInfoFile(string indexFile) {
          int registers =0; int delete = -1; 
         ofstream file; file.open(indexFile,  ofstream::trunc |ofstream::out );
-        // Trunc to 0 registers, and deleteNext is -1
+        // Trunc to 0 registers, and deleteNext file -1
         file.write((char *) &registers, sizeof( int));
         file.write((char *) &delete, sizeof(int));
         file.close();
@@ -91,33 +91,17 @@ private:
         initializeBuckets(); 
     }
 
-    void rebuild_index_file(std::string bucket) {
-        std::fstream index_file(hashIndexFile, std::ios::binary | std::ios::in | std::ios::out);
-        char *name = new char[MAX_DEPTH];
-        std::string new_name;
-        for (int i = 0; i < pow(2, MAX_DEPTH); ++i) {
-            index_file.seekg(0, std::ios::beg);
-            index_file.seekg((i * MAX_DEPTH * 2));
-            index_file.read(name, sizeof(char) * MAX_DEPTH);
-            std::string str(name);
-            if (str.substr(str.length() - bucket.length()) == bucket) {
-                new_name = std::string(1, str[str.length() - bucket.length() - 1]) + bucket;
-                index_file.seekg((i * MAX_DEPTH * 2) + MAX_DEPTH);
-                char array[MAX_DEPTH];
-                strcpy(array, new_name.c_str());
-                index_file.write(array, sizeof(char) * MAX_DEPTH);
-            }
-        }
-        index_file.close();
-    }
 
     void split(string bucket) {
         //create new buckets 
-        string bucketZero, bucketOne; 
-        fstream fileZero, fileOne; 
+        string bucketZero, bucketOne, bucketInitial; 
+        fstream fileZero, fileOne, file; 
         int totalRecords = 0; int deleteNext = -1;
         bucketZero ="0" + bucket + ".dat";        
         bucketOne = "1" + bucket + ".dat";
+        bucketInitial =  bucket + ".dat";
+
+        Car record;
         fileZero.open(bucketZero, ios::binary | ios::out | fstream::in);
         fileOne.open(bucketOne, ios::binary | ios::out | fstream::in);        
         fileZero.write((char *) &totalRecords, sizeof(int));
@@ -126,17 +110,34 @@ private:
         fileOne.write((char *) &deleteNext, sizeof(int));
         fileZero.close();
         fileOne.close();
-        //rebuilt index file
+        //TODO rebuilt index file
 
+        //
+        file.open(bucketInitial, fstream::binary);
+        file.read((char *) &totalRecords, sizeof(int));
+        file.read((char *) &deleteNext, sizeof(int));
+        file.seekg(0, ios::beg);
+        int posBegin = file.tellg();
+        file.seekg(0, ios::end);
+        int posEnd = file.tellg();
+        file.seekg(posBegin);
+        int size = posEnd - posBegin;
+        int i = sizeof(record);
+        while (i <= size) {
+            file.read((char *) &record, sizeof(record));
+            if (record.nextDel == -2) add_record(record);
+            i += sizeof(record);
+        }
+        file.close();
+        clear_file(old_file_name);
     }
 
-
-    void insertRecord(Car carRecord) {
-      /*  fstream indexFile(hashIndexFile, ios::binary | ios::in);
+        void insertRecord(Car carRecord) {
+        fstream indexFile(hashIndexFile, ios::binary | ios::in);
         indexFile.seekg(((2* GlobalDepth) * generateHash(carRecord.id, GlobalDepth) ) + GlobalDepth);
         char *file = new char[GlobalDepth];
         indexFile.read(file, sizeof(char) * GlobalDepth);
-        string str(file);
+        /*   string str(file);
         indexFile.close();
         string bucket= get_bucket_with_key(key_to_insert);
         string bucketFile =  bucket + ".dat";
@@ -151,6 +152,7 @@ private:
                 /*if reach number of records allow in a block and the local depth didn´t
                  exceeded the globaldepth, split the buckets      */      
                 split(bucket);
+                insertRecord()
      
             }
             else {
@@ -189,5 +191,30 @@ private:
 
         fileOfBucket.close();
     }
+
     
-    };
+    vector<Car> search(int key) {
+        Car record;
+        int totalRecords, deleteNext;
+        vector<Car> result;
+        fstream file; 
+        //TODO generate the hash and get the bucket corresponding to the hash 
+        file.open(bucket, ios::binary | ios::out | ios::in )
+        file.read((char *) &totalRecords, sizeof(int));
+        file.read((char *) &deleteNext, sizeof(int));
+        for (unsigned int i = 0; i < totalRecords; i++) {
+            file.read((char *) &record, sizeof(record));
+            //-3 means  that is not deleted
+            if (record.id == key && record.nextDel == -3)
+             {result.push_back(record);}
+        }
+        if (result.empty()){
+            throw"Key not found"; 
+        }
+        file.close();
+        return result;
+    }
+
+}; 
+    
+
