@@ -46,6 +46,11 @@ struct Car {
     }
 
 
-    Car() = default;
+    Car(){};
+
+    void display(){
+    cout << "\n ID: " << id << "\n model: " << string(model,sizeof(model)) << "\n year: " << year << "\n price: " << price << "\n transmission: " << string(transmission,sizeof(transmission)) << "\n mileage: " << mileage << "\n fuelType: " << string(fuelType,sizeof(fuelType)) << "\n tax: " << tax << "\n mpg: " << mpg << "\n engineSize: " << engineSize;
+  }
+
 
 };
