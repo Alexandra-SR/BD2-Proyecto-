@@ -139,7 +139,7 @@ private:
         indexFile.read(file, sizeof(char) * GlobalDepth);
         /*   string str(file);
         indexFile.close();
-        string bucket= get_bucket_with_key(key_to_insert);
+        string bucket= getBucket(key_to_insert);
         string bucketFile =  bucket + ".dat";
         */
     //
