@@ -112,14 +112,21 @@ private:
     }
 
     void split(string bucket) {
+        //create new buckets 
         string bucketZero, bucketOne; 
         fstream fileZero, fileOne; 
         int totalRecords = 0; int deleteNext = -1;
         bucketZero ="0" + bucket + ".dat";        
         bucketOne = "1" + bucket + ".dat";
         fileZero.open(bucketZero, ios::binary | ios::out | fstream::in);
-        fileOne.open(bucketOne, ios::binary | ios::out | fstream::in);
-
+        fileOne.open(bucketOne, ios::binary | ios::out | fstream::in);        
+        fileZero.write((char *) &totalRecords, sizeof(int));
+        fileZero.write((char *) &deleteNext, sizeof(int));
+        fileOne.write((char *) &totalRecords, sizeof(int));
+        fileOne.write((char *) &deleteNext, sizeof(int));
+        fileZero.close();
+        fileOne.close();
+        //rebuilt index file
 
     }
 
