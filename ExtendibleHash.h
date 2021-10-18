@@ -91,9 +91,41 @@ private:
         initializeBuckets(); 
     }
 
+    void rebuild_index_file(std::string bucket) {
+        std::fstream index_file(hashIndexFile, std::ios::binary | std::ios::in | std::ios::out);
+        char *name = new char[MAX_DEPTH];
+        std::string new_name;
+        for (int i = 0; i < pow(2, MAX_DEPTH); ++i) {
+            index_file.seekg(0, std::ios::beg);
+            index_file.seekg((i * MAX_DEPTH * 2));
+            index_file.read(name, sizeof(char) * MAX_DEPTH);
+            std::string str(name);
+            if (str.substr(str.length() - bucket.length()) == bucket) {
+                new_name = std::string(1, str[str.length() - bucket.length() - 1]) + bucket;
+                index_file.seekg((i * MAX_DEPTH * 2) + MAX_DEPTH);
+                char array[MAX_DEPTH];
+                strcpy(array, new_name.c_str());
+                index_file.write(array, sizeof(char) * MAX_DEPTH);
+            }
+        }
+        index_file.close();
+    }
+
+    void split(string bucket) {
+        string bucketZero, bucketOne; 
+        fstream fileZero, fileOne; 
+        int totalRecords = 0; int deleteNext = -1;
+        bucketZero ="0" + bucket + ".dat";        
+        bucketOne = "1" + bucket + ".dat";
+        fileZero.open(bucketZero, ios::binary | ios::out | fstream::in);
+        fileOne.open(bucketOne, ios::binary | ios::out | fstream::in);
+
+
+    }
+
 
     void insertRecord(Car carRecord) {
-        fstream indexFile(hashIndexFile, ios::binary | ios::in);
+      /*  fstream indexFile(hashIndexFile, ios::binary | ios::in);
         indexFile.seekg(((2* GlobalDepth) * generateHash(carRecord.id, GlobalDepth) ) + GlobalDepth);
         char *file = new char[GlobalDepth];
         indexFile.read(file, sizeof(char) * GlobalDepth);
@@ -101,6 +133,7 @@ private:
         indexFile.close();
         string bucket= get_bucket_with_key(key_to_insert);
         string bucketFile =  bucket + ".dat";
+        */
     //
         fstream fileOfBucket(bucketFile, ios::binary | ios::in | ios::out);
         int totalRecords, deleteNext;
