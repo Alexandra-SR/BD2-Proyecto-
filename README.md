@@ -148,4 +148,21 @@
 * **Ventajas:**
   - Es eficaz mientras la memoria principal soporte el directorio.
   - La eficiencia se mantiene con el crecimiento del archivo de datos.
-  - La cantidad de reescrituras no es tan grande.
+  - La cantidad de reescrituras no es tan grande.  
+
+## Resultados Experimentales  
+  
+  ***Sequential File***  
+  
+  ![Tiempo vs Operación por registro](/Imagenes/SF_ExecutionTimes.png)  
+  - Podemos observar como los tiempos de inserción aumentan cada cierta cantidad de operaciones, ya que al acabarse el espacio auxiliar los registros son escritos en memoria secundaria y ordenados de acuerdo a su key.
+  - Los tiempos de búsqueda y eliminación solo aumentan cuando el registro se encuentra en el archivo auxiliar, caso contrario su tiempo de ejecución se mantiene constante.
+
+  ***Extendible Hashing***
+  
+  ![Tiempo vs Operación por registro](/Imagenes/EH_ExecutionTimes.png)
+  - Los tiempos de búsqueda son constantes en cualquier moment.
+  - Los picos de tiempo en insertar se dan porque en algún momento se necesita hacer split de algun bucket.
+  - Los tiempos altos en eliminar se dan porque se necesita hacer merge entre dos buckets con cantidad baja de registros. 
+
+  
