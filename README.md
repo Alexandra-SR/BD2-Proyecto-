@@ -1,6 +1,6 @@
 # BASE DE DATOS 2 
 ## Proyecto 1 
-
+--------
 ## Integrantes ✒️
 
 - Juan Pablo Lozada [IWeseI] Participación: 100%
@@ -15,7 +15,7 @@
 - Juan Galvez Ccopa
 
 
-## Introducción
+## Introducción :dart:
 
 **_Objetivo:_** Implementar dos técnicas de organización de archivos que almacenen la información y permitan el manejo de los registros de manera eficaz. En este caso, nos permitirá encontrar los precios de venta y las características de determinados autos usados. Para lograr esto implementaremos _Sequential File y Extentible Hashing_.
 
@@ -33,6 +33,21 @@
 - **EngineSize**: Cilindrada.
 
 **_Resultados esperados:_** Se espera poder hacer inserción de registros, búsqueda por rango, búsqueda específica y eliminación de acuerdo al id.
+
+
+## Comenzando 🚀
+
+### Pre-requisitos 📋
+* [C++ 17](https://nuwen.net/mingw.html) 
+
+### Despliegue 📦
+
+**1.** Clonar el repositorio del proyecto.
+
+**2.** Realizar el Build del proyecto en su IDE de preferencia.
+
+**3.** Ejecutar el programa
+
 
 ## Descripción de las técnicas
 
