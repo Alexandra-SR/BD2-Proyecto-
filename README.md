@@ -49,7 +49,9 @@
 **3.** Ejecutar el programa
 
 
-## Descripción de las técnicas
+## Descripción de las técnicas --
+
+###  SEQUENTIAL FILE  💯
 
 **_Sequential file_**: En este método organizamos los registros de acuerdo a un valor de sus campos, para este caso usaremos el campo **Id** como key.
 
