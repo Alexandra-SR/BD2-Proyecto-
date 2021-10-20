@@ -273,6 +273,34 @@
   7. Retornar el registro encontrado.
   8. Cerrar el archivo.
 
+#### Búsqueda específica
+````c++
+ vector<Car> search(int key) {
+    Car record;
+    int totalRecords, deleteNext;
+    vector<Car> result;
+    fstream file; 
+
+    string bucketName= getBucket(key); 
+    string bucket = bucketName +".dat";
+    
+    file.open(bucket, ios::binary | ios::out | ios::in );
+    file.read((char *) &totalRecords, sizeof(int));
+    file.read((char *) &deleteNext, sizeof(int));
+    for (unsigned int i = 0; i < totalRecords; i++) {
+      file.read((char *) &record, sizeof(record));
+    // -1 means that the record  is not deleted
+      if (record.id == key && record.deleteNext == -2)
+        {result.push_back(record);}
+    }
+    if (result.empty()){
+      cerr<<"Key not found in search "<<endl;
+    }
+    file.close();
+    return result;
+  }
+````
+
 - **Inserción:**
 
   1. Calculamos el hash de la key que queremos buscar.
@@ -288,6 +316,59 @@
        - Reinsertamos todos los registros.
        - Se crean los nuevos buckets con la nueva profundidad local.
        - Se actualiza el directorio.
+
+#### Inserción 
+````c++
+ void insertRecord(Car carRecord) {
+    
+    string bucket= getBucket(carRecord);
+    string bucketFile = bucket +".dat";
+    
+    fstream fileOfBucket(bucketFile, ios::binary | ios::in | ios::out);
+    int totalRecords, deleteNext;
+    fileOfBucket.read((char *) &totalRecords, sizeof(int));
+    fileOfBucket.read((char *) &deleteNext, sizeof(int));
+    if (totalRecords >= BlockingFactor) {
+      if (bucket.length() < GlobalDepth) { 
+        /*if reach number of records allow in a block and the local depth didn´t
+          exceeded the GlobalDepth, splitBucket the buckets      */      
+        splitBucket(bucket);
+        insertRecord(carRecord);
+      }
+      else {
+        //if no more splitBuckets are allow due to the GlobalDepth add to the end 
+        ++totalRecords;
+        fileOfBucket.seekg(0, ios::beg);
+        fileOfBucket.write((char *) &totalRecords, sizeof(int));
+        fileOfBucket.seekg(0, ios::end);
+        fileOfBucket.write((char *) &carRecord, sizeof(Car));
+      }
+    } 
+    else {    
+      //update the number of total records
+      ++totalRecords; 
+      fileOfBucket.seekg(0, ios::beg);
+      fileOfBucket.write((char *) &totalRecords, sizeof(int));
+      // if there's no deleted record add to the end 
+      if (deleteNext == -1){
+        fileOfBucket.seekg(0, ios::end);
+        fileOfBucket.write((char *) &carRecord, sizeof(Car));
+      } 
+      else {
+        fileOfBucket.seekg(deleteNext, ios::beg);
+        Car deletedRecord;
+        // LIFO technique, so insert in the first deleted record 
+        fileOfBucket.read((char *) &deletedRecord, sizeof(Car));
+        int deletedeleteNextetedRecord = deletedRecord.deleteNext;
+        fileOfBucket.seekg(deleteNext, ios::beg);
+        fileOfBucket.write((char *) &carRecord, sizeof(Car));
+        fileOfBucket.seekg(sizeof(int));
+        fileOfBucket.write((char *) &deletedeleteNextetedRecord, sizeof(int));
+      }
+    }
+    fileOfBucket.close();
+  }
+````
 
 - **Eliminación:**
 
@@ -307,6 +388,93 @@
      - Escribir los registros en el nuevo bucket.
      - Actualizamos el directorio.
      - Cerrar el directorio.
+
+#### Eliminación 
+````c++
+
+  void removeRegister(int key){
+    fstream file;
+    int totalRecords, deleteNext;
+    Car record; 
+    string bucket= getBucket(key);
+    string bucketFile = bucket +".dat";
+    
+    file.open(bucketFile, ios::binary | ios::out | ios::in );
+    file.read((char *) &totalRecords, sizeof(int));
+    file.read((char *) &deleteNext, sizeof(int));
+    
+    --totalRecords;
+    bool flag = false;
+
+    if(totalRecords <= 0){
+      if(file.tellp() == file.eof()){
+        cerr<< "Key not found in remove"<<endl; 
+        return;
+      }
+      while(file.read((char *) &record, sizeof(record))) {
+        if (record.id == key && record.deleteNext == -2){
+          flag = true;
+          break;
+        }
+      }
+      if(!flag){
+        cerr<< "Key not found in remove"<<endl; 
+        return;
+      }
+
+      char* char_array;
+      char* char_array2;
+      char_array = &bucketFile[0];
+      std::remove(char_array);
+      buckets.erase(bucket);
+
+      string newBucket = bucketFile.substr(1,bucketFile.length()-1);
+      
+      if(bucketFile[0] == '0'){
+        bucketFile[0] = '1';
+      }else{
+        bucketFile[0] = '0';
+      }
+
+      buckets.erase(bucket);
+      buckets.insert(newBucket);
+      
+      char_array = &bucketFile[0];
+      char_array2 = &newBucket[0];
+
+      std::rename(char_array, char_array2);
+
+      return;
+    }else{
+
+     while(file.read((char *) &record, sizeof(record))) {
+        if (record.id == key && record.deleteNext == -2){
+          record.deleteNext = deleteNext;
+          deleteNext = int(file.tellp())-sizeof(record);
+          flag = true;
+          break;
+        }
+      }
+      if(!flag){
+        cerr<< "Key not found in remove"<<endl;
+        return;
+      }
+
+      record.deleteNext = deleteNext;
+      file.close();
+      file.open(bucketFile, ios::binary | ios::out | fstream::out);
+      file.seekg(deleteNext, ios::beg);
+      file.write((char*)&record, sizeof(record));
+      file.seekg(0,ios::beg);
+      file.write((char *) &totalRecords, sizeof(int));
+      file.write((char *) &deleteNext, sizeof(int));
+      
+      return;
+    }
+  }
+
+
+````
 
 * **Ventajas:**
   - Es eficaz mientras la memoria principal soporte el directorio.
