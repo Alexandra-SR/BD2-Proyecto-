@@ -1,3 +1,6 @@
+#ifndef CARRECORD_H
+#define CARRECORD_H
+
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -6,21 +9,17 @@ using namespace std;
 
 
 struct Car {
-
-
     int deleteNext; 
     unsigned int id;
-    char model[2];
+    char model[3];
     unsigned int year;
     unsigned int price;
-    char transmission[10];
+    char transmission[9];
     unsigned int mileage;
     char fuelType[6];
-    unsigned int tax;
-    float milesPerGaloon;
-    float engineSize;
-
-    
+    double tax;
+    double milesPerGaloon;
+    double engineSize;
 
     Car(unsigned int id,
         string Model,
@@ -29,9 +28,9 @@ struct Car {
         string Transmission,
         unsigned int mileage,
         string FuelType,
-        unsigned int tax,
-        float milesPerGaloon,
-        float engineSize) {
+        double tax,
+        double milesPerGaloon,
+        double engineSize) {
         this->id = id;
         strcpy(model, Model.c_str());
         this->year = year;
@@ -42,15 +41,16 @@ struct Car {
         this->tax = tax;
         this->milesPerGaloon = milesPerGaloon;
         this->engineSize = engineSize;
-        this->deleteNext = -1;
+        this->deleteNext = -2;
     }
-
 
     Car(){};
 
     void display(){
-    cout << "\n ID: " << id << "\n model: " << string(model,sizeof(model)) << "\n year: " << year << "\n price: " << price << "\n transmission: " << string(transmission,sizeof(transmission)) << "\n mileage: " << mileage << "\n fuelType: " << string(fuelType,sizeof(fuelType)) << "\n tax: " << tax << "\n mpg: " << mpg << "\n engineSize: " << engineSize;
+    cout << "\n ID: " << id << "\n model: " << string(model,sizeof(model)) << "\n year: " << year << "\n price: " << price << "\n transmission: " << string(transmission,sizeof(transmission)) << "\n mileage: " << mileage << "\n fuelType: " << string(fuelType,sizeof(fuelType)) << "\n tax: " << tax << "\n mpg: " << milesPerGaloon << "\n engineSize: " << engineSize;
   }
 
 
 };
+
+#endif
