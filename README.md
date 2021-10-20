@@ -49,7 +49,7 @@
 **3.** Ejecutar el programa
 
 
-## Descripción de las técnicas --
+## Descripción de las técnicas 
 
 ###  SEQUENTIAL FILE  💯
 
@@ -98,6 +98,10 @@
 
 * **Ventajas:**
   - Al ser un arhivo ordenado la búsqueda de registros se realizará siempre en log(n).
+
+---
+
+###  Extendible Hashing 🔝
 
 **_Extendible Hashing:_** El hash extensible es una estructura que se actualiza dinámicamente y que implementa un esquema de hash utilizando un directorio. El índice se utiliza para encontrar consultas donde exista un registro con una key determinada.
 
