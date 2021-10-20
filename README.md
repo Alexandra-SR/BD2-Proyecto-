@@ -165,4 +165,9 @@
   - Los picos de tiempo en insertar se dan porque en algún momento se necesita hacer split de algun bucket.
   - Los tiempos altos en eliminar se dan porque se necesita hacer merge entre dos buckets con cantidad baja de registros. 
 
+
+## Evidencias 🚀
+
+* [Video](https://drive.google.com/drive/folders/1FY2bS6usvtPjwruH39Gzagi8iZs4J8BQ?usp=sharing) 
+
   
