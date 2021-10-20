@@ -73,6 +73,79 @@
       - Se cierra el archivo auxiliar.
   7.  Se cierra el archivo principal de datos.
 
+
+#### Búsqueda específica
+````c++
+
+  Registro search(unsigned int key){
+    ifstream datos;
+    datos.open("datos.bin", ios::binary);
+
+    Registro registro;
+    int a = 0;
+    int b = mainSize-1;
+    int m;
+
+    do{     
+      m = ceil((a+b)/2);
+      datos.seekg(m*sizeof(Registro), ios::beg);
+      datos.read((char*)&registro, sizeof(Registro));
+      if(registro.id > key){
+		    b = m-1;
+      }
+      else if (registro.id < key) {
+	      a = m;
+      }
+      else if(registro.id == key && registro.location != '-'){
+        return registro;
+      }
+      else{
+        b = m-1;
+      }
+    }while(a+1<b);
+
+    m = ceil((a+b)/2);
+    datos.seekg(m*sizeof(Registro), ios::beg);
+    datos.read((char*)&registro, sizeof(Registro));
+    Registro registroMin;
+
+    if(registro.location == '-'){
+      Registro registroMin;
+      datos.seekg(0, ios::beg);
+      while (datos.read((char *) &registro, sizeof(Registro))) {
+        if(registro.location != '-' && registro.id < key){
+          registroMin = registro;
+          break;
+        }
+      }
+      datos.open("aux.bin", ios::binary);
+      datos.seekg(0, ios::beg);
+      while (datos.read((char *) &registro, sizeof(Registro))) {
+        if(registro.nextLocation != '-' && registro.id < key){
+          registroMin = registro;
+          break;
+        }
+      }
+    }
+
+    registroMin = registro;
+    Registro registroNext = registroMin;
+    while(registro.id < key && readNext(registroNext)){
+      if(registroNext.id==key){
+        return registroNext;
+      }else if(registroNext.id > key){
+        return registro;
+      }
+      registro = registroNext; 
+    }
+
+    datos.close();
+    return registro;
+  }
+
+````
+
+
 - **Inserción:**
 
   1. Abrimos el archivo auxiliar.
@@ -83,6 +156,39 @@
      2.4 Se escribe el registro.
   3. Se cierra el archivo.
 
+#### Inserción
+````c++
+  void insertAll(vector<Registro> registros){
+    mainSize= 0;
+    auxSize = 0;
+    //Borrado de datos
+    ofstream files;
+    files.open("datos.bin", std::ofstream::out | std::ofstream::trunc | ios::binary);
+    files.close();
+    files.open("aux.bin", std::ofstream::out | std::ofstream::trunc);
+    files.close();
+
+    sort(registros.begin(), registros.end(), comparator());
+
+    ofstream datos;
+    datos.open("datos.bin", ios::binary | ios::in);
+    if(datos.is_open()){
+      for(auto registro:registros){
+        registro.pos = datos.tellp()/78;
+        registro.location = 'm';
+        registro.nextPos = int(datos.tellp())/78 + 1;
+        registro.nextLocation = 'm';
+        datos.write((char*)&registro, sizeof(Registro));
+        mainSize++;
+      }
+    }else{
+      cout<<"No se pudo abrir el archivo";
+    }
+    datos.close();
+  }
+
+````
+
 - **Eliminación:**
 
   1. Se busca el registro que va antes del registro actual.
@@ -90,14 +196,65 @@
   3. Se marca el registro como eliminado.
   4. Se hace update a los registros modificados.
 
+#### Eliminación
+````c++
+
+  bool deleteRegistro(unsigned int key){
+    Registro registro = search(key-1);
+
+    Registro registroNext = registro;
+
+    while(registro.id < key && readNext(registroNext)){
+      if(registroNext.id==key){
+        registro.nextPos = registroNext.nextPos;
+        registro.nextLocation = registroNext.nextLocation;
+        update(registro);
+        registroNext.nextPos = -1;
+        registroNext.nextLocation = '-';
+        update(registroNext);
+        registroNext.display();
+        return true;
+      }
+      registro = registroNext;
+    }
+    return false;
+  }
+
+````
 - **Búsqueda por rango:**
 
   1. Se busca el archivo registro inicial.
   2. Se itera añadiendo los registros hasta llegar al registro final.
   3. Retorna un vector de registros.
 
+
+
+#### Búsqueda por rango 
+````c++
+
+  vector<Registro> rangeSearch(unsigned int begin, unsigned int end){
+
+    vector<Registro> registros = {};
+    Registro registro = search(begin);
+
+    if(registro.id < begin){
+      readNext(registro);
+    }
+    while(registro.id >= begin && registro.id <= end){
+      registros.push_back(registro);
+      if(!readNext(registro)){
+        break;
+      }
+    }
+    return registros;
+  }
+  
+````
+
+
 * **Ventajas:**
   - Al ser un arhivo ordenado la búsqueda de registros se realizará siempre en log(n).
+
 
 ---
 
