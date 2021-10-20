@@ -1,6 +1,6 @@
 # BASE DE DATOS 2 
 ## Proyecto 1 
---------
+
 ## Integrantes ✒️
 
 - Juan Pablo Lozada [IWeseI] Participación: 100%
