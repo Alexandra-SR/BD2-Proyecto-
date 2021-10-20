@@ -17,7 +17,7 @@ private:
   string hashIndexFile;
   int  GlobalDepth;
   int BlockingFactor;
-
+  set<string> buckets;
 
   string convertBinary(long key,  int length){
     string binary= bitset<M>(key).to_string();
@@ -202,7 +202,96 @@ private:
     fileOfBucket.close();
   }
 
+  void removeRegister(int key){
+    fstream file;
+    int totalRecords, deleteNext;
+    Car record; 
+    string bucket= getBucket(key);
+    string bucketFile = bucket +".dat";
+    
+    file.open(bucketFile, ios::binary | ios::out | ios::in );
+    file.read((char *) &totalRecords, sizeof(int));
+    file.read((char *) &deleteNext, sizeof(int));
+    
+    --totalRecords;
+    bool flag = false;
 
+    if(totalRecords <= 0){
+      if(file.tellp() == file.eof()){
+        cerr<< "Key not found in remove"<<endl; 
+        return;
+      }
+      while(file.read((char *) &record, sizeof(record))) {
+        if (record.id == key && record.deleteNext == -2){
+          flag = true;
+          break;
+        }
+      }
+      if(!flag){
+        cerr<< "Key not found in remove"<<endl; 
+        return;
+      }
+
+      char* char_array;
+
+      char* char_array2;
+
+      char_array = &bucketFile[0];
+
+      std::remove(char_array);
+
+      buckets.erase(bucket);
+
+      string newBucket = bucketFile.substr(1,bucketFile.length()-1);
+      
+      if(bucketFile[0] == '0'){
+        bucketFile[0] = '1';
+      }else{
+        bucketFile[0] = '0';
+      }
+
+      buckets.erase(bucket);
+      buckets.insert(newBucket);
+      
+      char_array = &bucketFile[0];
+      char_array2 = &newBucket[0];
+
+      std::rename(char_array, char_array2);
+
+      return;
+    }else{
+
+     while(file.read((char *) &record, sizeof(record))) {
+        if (record.id == key && record.deleteNext == -2){
+          record.deleteNext = deleteNext;
+          deleteNext = int(file.tellp())-sizeof(record);
+          flag = true;
+          break;
+        }
+      }
+      if(!flag){
+        cerr<< "Key not found in remove"<<endl;
+        return;
+      }
+
+      record.deleteNext = deleteNext;
+
+      file.close();
+
+      file.open(bucketFile, ios::binary | ios::out | fstream::out);
+
+      file.seekg(deleteNext, ios::beg);
+
+      file.write((char*)&record, sizeof(record));
+
+      file.seekg(0,ios::beg);
+      file.write((char *) &totalRecords, sizeof(int));
+      file.write((char *) &deleteNext, sizeof(int));
+      
+      return;
+    }
+  }
+    
   vector<Car> search(int key) {
     Car record;
     int totalRecords, deleteNext;
